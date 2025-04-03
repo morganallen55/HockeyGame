@@ -4,6 +4,13 @@ import { GestureHandlerRootView, PanGestureHandler } from 'react-native-gesture-
 import { GAME_CONSTANTS } from './constants';
 import { checkCollision, calculatePuckMovement, applyFriction, calculatePlayerMovement, calculateEnemyMovement, checkGoal } from './physics';
 
+const assets = {
+    playerImage: require('./assets/player.png'),
+    enemyImage: require('./assets/enemy.png'),
+    puckImage: require('./assets/puck.png'),
+    rinkImage: require('./assets/rink.png'),
+};
+
 export default function App() {
     const [gameState, setGameState] = useState({
         score: 0,
@@ -161,7 +168,7 @@ export default function App() {
 
     return (
         <GestureHandlerRootView style={styles.container} {...panResponder.panHandlers}>
-            <View style={styles.rink} />
+            <Image source={assets.rinkImage} style={styles.rink} resizeMode="cover" />
             
             {/* Score and Timer */}
             <View style={styles.gameInfo}>
@@ -179,10 +186,17 @@ export default function App() {
                         {
                             left: player.position.x - GAME_CONSTANTS.PLAYER_SIZE / 2,
                             top: player.position.y - GAME_CONSTANTS.PLAYER_SIZE / 2,
-                            backgroundColor: gameState.selectedPlayer === player.id ? '#FFD700' : GAME_CONSTANTS.PLAYER_COLOR,
                         },
                     ]}
-                />
+                >
+                    <Image 
+                        source={assets.playerImage} 
+                        style={[
+                            styles.playerImage,
+                            gameState.selectedPlayer === player.id && styles.selectedPlayer
+                        ]} 
+                    />
+                </TouchableOpacity>
             ))}
             
             {gameState.enemies.map(enemy => (
@@ -195,7 +209,9 @@ export default function App() {
                             top: enemy.position.y - GAME_CONSTANTS.ENEMY_SIZE / 2,
                         },
                     ]}
-                />
+                >
+                    <Image source={assets.enemyImage} style={styles.enemyImage} />
+                </View>
             ))}
             
             <View
@@ -206,7 +222,9 @@ export default function App() {
                         top: gameState.puck.position.y - GAME_CONSTANTS.PUCK_SIZE / 2,
                     },
                 ]}
-            />
+            >
+                <Image source={assets.puckImage} style={styles.puckImage} />
+            </View>
             
             {/* Game Over Screen */}
             {gameState.isGameOver && (
@@ -257,9 +275,6 @@ const styles = StyleSheet.create({
         position: 'absolute',
         width: '100%',
         height: '100%',
-        backgroundColor: GAME_CONSTANTS.ICE_COLOR,
-        borderWidth: 5,
-        borderColor: GAME_CONSTANTS.RINK_BORDER,
     },
     gameInfo: {
         position: 'absolute',
@@ -283,21 +298,34 @@ const styles = StyleSheet.create({
         position: 'absolute',
         width: GAME_CONSTANTS.PLAYER_SIZE,
         height: GAME_CONSTANTS.PLAYER_SIZE,
-        borderRadius: GAME_CONSTANTS.PLAYER_SIZE / 2,
+    },
+    playerImage: {
+        width: '100%',
+        height: '100%',
+        resizeMode: 'contain',
+    },
+    selectedPlayer: {
+        tintColor: '#FFD700',
     },
     enemy: {
         position: 'absolute',
         width: GAME_CONSTANTS.ENEMY_SIZE,
         height: GAME_CONSTANTS.ENEMY_SIZE,
-        borderRadius: GAME_CONSTANTS.ENEMY_SIZE / 2,
-        backgroundColor: GAME_CONSTANTS.ENEMY_COLOR,
+    },
+    enemyImage: {
+        width: '100%',
+        height: '100%',
+        resizeMode: 'contain',
     },
     puck: {
         position: 'absolute',
         width: GAME_CONSTANTS.PUCK_SIZE,
         height: GAME_CONSTANTS.PUCK_SIZE,
-        borderRadius: GAME_CONSTANTS.PUCK_SIZE / 2,
-        backgroundColor: GAME_CONSTANTS.PUCK_COLOR,
+    },
+    puckImage: {
+        width: '100%',
+        height: '100%',
+        resizeMode: 'contain',
     },
     gameOverContainer: {
         position: 'absolute',

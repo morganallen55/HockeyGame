@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, Image, Dimensions } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Image, Dimensions, PanResponder } from 'react-native';
 import { GestureHandlerRootView, PanGestureHandler } from 'react-native-gesture-handler';
 import { GAME_CONSTANTS } from './constants';
 import { checkCollision, calculatePuckMovement, applyFriction, calculatePlayerMovement, calculateEnemyMovement, checkGoal } from './physics';
@@ -29,6 +29,66 @@ export default function App() {
     });
     const [showWelcome, setShowWelcome] = useState(true);
     const gameLoop = useRef(null);
+    const lastTouchPosition = useRef({ x: 0, y: 0 });
+
+    const panResponder = useRef(
+        PanResponder.create({
+            onStartShouldSetPanResponder: () => true,
+            onMoveShouldSetPanResponder: () => true,
+            onPanResponderGrant: (evt, gestureState) => {
+                lastTouchPosition.current = {
+                    x: gestureState.x0,
+                    y: gestureState.y0,
+                };
+            },
+            onPanResponderMove: (evt, gestureState) => {
+                if (gameState.selectedPlayer) {
+                    const selectedPlayer = gameState.players.find(p => p.id === gameState.selectedPlayer);
+                    if (selectedPlayer) {
+                        const direction = {
+                            x: gestureState.moveX - lastTouchPosition.current.x,
+                            y: gestureState.moveY - lastTouchPosition.current.y,
+                        };
+                        const distance = Math.sqrt(direction.x * direction.x + direction.y * direction.y);
+                        if (distance > 0) {
+                            direction.x /= distance;
+                            direction.y /= distance;
+                        }
+                        setGameState(prevState => ({
+                            ...prevState,
+                            players: prevState.players.map(player =>
+                                player.id === gameState.selectedPlayer
+                                    ? { ...player, position: calculatePlayerMovement(player.position, direction) }
+                                    : player
+                            ),
+                        }));
+                    }
+                }
+                lastTouchPosition.current = {
+                    x: gestureState.moveX,
+                    y: gestureState.moveY,
+                };
+            },
+            onPanResponderRelease: (evt, gestureState) => {
+                if (gameState.selectedPlayer) {
+                    const selectedPlayer = gameState.players.find(p => p.id === gameState.selectedPlayer);
+                    if (selectedPlayer && checkCollision(selectedPlayer, gameState.puck)) {
+                        const velocity = {
+                            x: gestureState.vx * 2,
+                            y: gestureState.vy * 2,
+                        };
+                        setGameState(prevState => ({
+                            ...prevState,
+                            puck: {
+                                ...prevState.puck,
+                                velocity,
+                            },
+                        }));
+                    }
+                }
+            },
+        })
+    ).current;
 
     const startGame = () => {
         setShowWelcome(false);
@@ -100,7 +160,7 @@ export default function App() {
     }
 
     return (
-        <GestureHandlerRootView style={styles.container}>
+        <GestureHandlerRootView style={styles.container} {...panResponder.panHandlers}>
             <View style={styles.rink} />
             
             {/* Score and Timer */}
@@ -111,8 +171,9 @@ export default function App() {
             
             {/* Game Objects */}
             {gameState.players.map(player => (
-                <View
+                <TouchableOpacity
                     key={player.id}
+                    onPress={() => setGameState(prevState => ({ ...prevState, selectedPlayer: player.id }))}
                     style={[
                         styles.player,
                         {

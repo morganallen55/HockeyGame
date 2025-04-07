@@ -1,5 +1,7 @@
 import React, { useRef } from "react";
 import { StatusBar, View } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";  // Import this
+
 import { GameEngine } from "react-native-game-engine";
 import Matter from "matter-js";
 import entities from "./entities";
@@ -10,7 +12,7 @@ export default function App() {
   const world = Matter.World.create({ gravity: { x: 0, y: 0 } });
 
   return (
-    <View style={{ flex: 1 }}>
+    <GestureHandlerRootView style={{ flex: 1 }}>  // Wrap with GestureHandlerRootView
       <StatusBar hidden={true} />
       <GameEngine
         ref={gameEngine}
@@ -19,6 +21,6 @@ export default function App() {
         running={true}
         style={{ flex: 1, backgroundColor: "lightblue" }}
       />
-    </View>
+    </GestureHandlerRootView>
   );
 }

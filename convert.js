@@ -1,7 +1,7 @@
 const sharp = require('sharp');
 const fs = require('fs');
 
-const convertSvgToPng = async (svgPath, pngPath) => {
+async function convertSvgToPng(svgPath, pngPath) {
     try {
         const svgBuffer = fs.readFileSync(svgPath);
         await sharp(svgBuffer)
@@ -11,10 +11,12 @@ const convertSvgToPng = async (svgPath, pngPath) => {
     } catch (error) {
         console.error(`Error converting ${svgPath}:`, error);
     }
-};
+}
 
-// Convert all SVG files
-convertSvgToPng('assets/rink.svg', 'assets/rink.png');
-convertSvgToPng('assets/player.svg', 'assets/player.png');
-convertSvgToPng('assets/enemy.svg', 'assets/enemy.png');
-convertSvgToPng('assets/puck.svg', 'assets/puck.png'); 
+// Convert all SVG files to PNG
+convertSvgToPng('assets/player_sprites.svg', 'assets/player_sprites.png');
+convertSvgToPng('assets/enemy_sprites.svg', 'assets/enemy_sprites.png');
+convertSvgToPng('assets/goalie_sprites.svg', 'assets/goalie_sprites.png');
+convertSvgToPng('assets/goal_net.svg', 'assets/goal_net.png');
+convertSvgToPng('assets/puck.svg', 'assets/puck.png');
+convertSvgToPng('assets/rink.svg', 'assets/rink.png'); 

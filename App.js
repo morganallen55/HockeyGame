@@ -1,99 +1,166 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, Image, Dimensions, PanResponder } from 'react-native';
-import { GestureHandlerRootView, PanGestureHandler } from 'react-native-gesture-handler';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { GAME_CONSTANTS } from './constants';
 import { checkCollision, calculatePuckMovement, applyFriction, calculatePlayerMovement, calculateEnemyMovement, checkGoal } from './physics';
 
+const { width, height } = Dimensions.get('window');
+const RINK_WIDTH = width;
+const RINK_HEIGHT = height;
+const PLAYER_SIZE = 32;
+const PUCK_SIZE = 16;
+const GOAL_WIDTH = 100;
+const GOAL_HEIGHT = 60;
+const GAME_DURATION = 300; // 5 minutes in seconds
+
+// Sprite sheet frame indices
+const SPRITE_FRAMES = {
+    FACING_RIGHT: 0,
+    FACING_LEFT: 1,
+    SHOOTING_RIGHT: 2,
+    SHOOTING_LEFT: 3
+};
+
+const GOALIE_FRAMES = {
+    STANDING: 0,
+    DIVING_RIGHT: 1,
+    DIVING_LEFT: 2
+};
+
 const assets = {
-    playerImage: require('./assets/player.png'),
-    enemyImage: require('./assets/enemy.png'),
-    puckImage: require('./assets/puck.png'),
-    rinkImage: require('./assets/rink.png'),
+    playerSprites: require('./assets/player_sprites.png'),
+    enemySprites: require('./assets/enemy_sprites.png'),
+    goalieSprites: require('./assets/goalie_sprites.png'),
+    puck: require('./assets/puck.png'),
+    rink: require('./assets/rink.png'),
+    goalNet: require('./assets/goal_net.png'),
 };
 
 export default function App() {
     const [gameState, setGameState] = useState({
         score: 0,
-        gameTime: GAME_CONSTANTS.GAME_DURATION,
+        gameTime: GAME_DURATION,
         isGameOver: false,
         selectedPlayer: null,
         players: [
-            { id: 1, position: { x: GAME_CONSTANTS.SCREEN_WIDTH * 0.3, y: GAME_CONSTANTS.SCREEN_HEIGHT * 0.5 }, velocity: { x: 0, y: 0 } },
-            { id: 2, position: { x: GAME_CONSTANTS.SCREEN_WIDTH * 0.4, y: GAME_CONSTANTS.SCREEN_HEIGHT * 0.5 }, velocity: { x: 0, y: 0 } },
+            { id: 1, position: { x: width * 0.3, y: height * 0.3 }, velocity: { x: 2, y: 1 }, frame: SPRITE_FRAMES.FACING_RIGHT },
+            { id: 2, position: { x: width * 0.7, y: height * 0.3 }, velocity: { x: -2, y: 1 }, frame: SPRITE_FRAMES.FACING_LEFT },
+            { id: 3, position: { x: width * 0.3, y: height * 0.7 }, velocity: { x: 2, y: -1 }, frame: SPRITE_FRAMES.FACING_RIGHT },
+            { id: 4, position: { x: width * 0.7, y: height * 0.7 }, velocity: { x: -2, y: -1 }, frame: SPRITE_FRAMES.FACING_LEFT }
         ],
         enemies: [
-            { id: 1, position: { x: GAME_CONSTANTS.SCREEN_WIDTH * 0.6, y: GAME_CONSTANTS.SCREEN_HEIGHT * 0.3 }, velocity: { x: 0, y: 0 } },
-            { id: 2, position: { x: GAME_CONSTANTS.SCREEN_WIDTH * 0.7, y: GAME_CONSTANTS.SCREEN_HEIGHT * 0.7 }, velocity: { x: 0, y: 0 } },
+            { id: 1, position: { x: width * 0.4, y: height * 0.4 }, isSelected: false, frame: SPRITE_FRAMES.FACING_RIGHT },
+            { id: 2, position: { x: width * 0.6, y: height * 0.4 }, isSelected: false, frame: SPRITE_FRAMES.FACING_LEFT },
+            { id: 3, position: { x: width * 0.4, y: height * 0.6 }, isSelected: false, frame: SPRITE_FRAMES.FACING_RIGHT },
+            { id: 4, position: { x: width * 0.6, y: height * 0.6 }, isSelected: false, frame: SPRITE_FRAMES.FACING_LEFT }
+        ],
+        goalies: [
+            { id: 1, position: { x: 60, y: height * 0.5 }, frame: GOALIE_FRAMES.STANDING },
+            { id: 2, position: { x: width - 60, y: height * 0.5 }, frame: GOALIE_FRAMES.STANDING }
         ],
         puck: {
-            position: { x: GAME_CONSTANTS.SCREEN_WIDTH / 2, y: GAME_CONSTANTS.SCREEN_HEIGHT / 2 },
-            velocity: { x: 0, y: 0 },
-        },
-        nets: {
-            left: { x: 50, y: GAME_CONSTANTS.SCREEN_HEIGHT * 0.5 - 40 },
-            right: { x: GAME_CONSTANTS.SCREEN_WIDTH - 150, y: GAME_CONSTANTS.SCREEN_HEIGHT * 0.5 - 40 },
-        },
+            position: { x: width / 2, y: height / 2 },
+            velocity: { x: 0, y: 0 }
+        }
     });
     const [showWelcome, setShowWelcome] = useState(true);
     const gameLoop = useRef(null);
-    const lastTouchPosition = useRef({ x: 0, y: 0 });
+    const lastUpdate = useRef(Date.now());
 
     const panResponder = useRef(
         PanResponder.create({
             onStartShouldSetPanResponder: () => true,
             onMoveShouldSetPanResponder: () => true,
             onPanResponderGrant: (evt, gestureState) => {
-                lastTouchPosition.current = {
-                    x: gestureState.x0,
-                    y: gestureState.y0,
-                };
+                const { locationX, locationY } = evt.nativeEvent;
+                const clickedEnemy = gameState.enemies.findIndex(enemy => {
+                    const dx = locationX - enemy.position.x;
+                    const dy = locationY - enemy.position.y;
+                    return Math.sqrt(dx * dx + dy * dy) < PLAYER_SIZE / 2;
+                });
+                
+                if (clickedEnemy !== -1) {
+                    setGameState(prevState => ({
+                        ...prevState,
+                        selectedPlayer: clickedEnemy,
+                        enemies: prevState.enemies.map((enemy, index) =>
+                            index === clickedEnemy ? { ...enemy, isSelected: true } : enemy
+                        ),
+                    }));
+                }
             },
             onPanResponderMove: (evt, gestureState) => {
-                if (gameState.selectedPlayer) {
-                    const selectedPlayer = gameState.players.find(p => p.id === gameState.selectedPlayer);
-                    if (selectedPlayer) {
-                        const direction = {
-                            x: gestureState.moveX - lastTouchPosition.current.x,
-                            y: gestureState.moveY - lastTouchPosition.current.y,
-                        };
-                        const distance = Math.sqrt(direction.x * direction.x + direction.y * direction.y);
-                        if (distance > 0) {
-                            direction.x /= distance;
-                            direction.y /= distance;
-                        }
+                if (gameState.selectedPlayer !== null) {
+                    const selectedEnemy = gameState.enemies[gameState.selectedPlayer];
+                    if (selectedEnemy) {
+                        const newX = Math.max(PLAYER_SIZE/2, Math.min(RINK_WIDTH - PLAYER_SIZE/2, selectedEnemy.position.x + gestureState.dx));
+                        const newY = Math.max(PLAYER_SIZE/2, Math.min(RINK_HEIGHT - PLAYER_SIZE/2, selectedEnemy.position.y + gestureState.dy));
+                        
+                        // Update sprite frame based on movement direction
+                        const frame = gestureState.dx > 0 ? SPRITE_FRAMES.FACING_RIGHT : SPRITE_FRAMES.FACING_LEFT;
+                        
                         setGameState(prevState => ({
                             ...prevState,
-                            players: prevState.players.map(player =>
-                                player.id === gameState.selectedPlayer
-                                    ? { ...player, position: calculatePlayerMovement(player.position, direction) }
-                                    : player
+                            enemies: prevState.enemies.map((enemy, index) =>
+                                index === gameState.selectedPlayer
+                                    ? { ...enemy, position: { x: newX, y: newY }, frame }
+                                    : enemy
                             ),
                         }));
                     }
                 }
-                lastTouchPosition.current = {
-                    x: gestureState.moveX,
-                    y: gestureState.moveY,
-                };
             },
             onPanResponderRelease: (evt, gestureState) => {
-                if (gameState.selectedPlayer) {
-                    const selectedPlayer = gameState.players.find(p => p.id === gameState.selectedPlayer);
-                    if (selectedPlayer && checkCollision(selectedPlayer, gameState.puck)) {
-                        const velocity = {
-                            x: gestureState.vx * 2,
-                            y: gestureState.vy * 2,
-                        };
+                if (gameState.selectedPlayer !== null) {
+                    const selectedEnemy = gameState.enemies[gameState.selectedPlayer];
+                    if (selectedEnemy) {
+                        // Set shooting frame based on release direction
+                        const frame = gestureState.dx > 0 ? SPRITE_FRAMES.SHOOTING_RIGHT : SPRITE_FRAMES.SHOOTING_LEFT;
+                        
+                        // Calculate puck movement if hit
+                        const dx = gameState.puck.position.x - selectedEnemy.position.x;
+                        const dy = gameState.puck.position.y - selectedEnemy.position.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        
+                        if (distance < PLAYER_SIZE + PUCK_SIZE) {
+                            const speed = Math.sqrt(gestureState.vx * gestureState.vx + gestureState.vy * gestureState.vy);
+                            setGameState(prevState => ({
+                                ...prevState,
+                                puck: {
+                                    ...prevState.puck,
+                                    velocity: {
+                                        x: gestureState.vx * speed,
+                                        y: gestureState.vy * speed
+                                    }
+                                }
+                            }));
+                        }
+                        
+                        // Reset player selection and update frame
                         setGameState(prevState => ({
                             ...prevState,
-                            puck: {
-                                ...prevState.puck,
-                                velocity,
-                            },
+                            selectedPlayer: null,
+                            enemies: prevState.enemies.map((enemy, index) =>
+                                index === gameState.selectedPlayer
+                                    ? { ...enemy, isSelected: false, frame }
+                                    : enemy
+                            )
                         }));
+                        
+                        // Reset frame after shot animation
+                        setTimeout(() => {
+                            setGameState(prevState => ({
+                                ...prevState,
+                                enemies: prevState.enemies.map((enemy, index) =>
+                                    index === gameState.selectedPlayer
+                                        ? { ...enemy, frame: gestureState.dx > 0 ? SPRITE_FRAMES.FACING_RIGHT : SPRITE_FRAMES.FACING_LEFT }
+                                        : enemy
+                                )
+                            }));
+                        }, 200);
                     }
                 }
-            },
+            }
         })
     ).current;
 
@@ -102,7 +169,7 @@ export default function App() {
         setGameState(prevState => ({
             ...prevState,
             score: 0,
-            gameTime: GAME_CONSTANTS.GAME_DURATION,
+            gameTime: GAME_DURATION,
             isGameOver: false,
             selectedPlayer: null,
         }));
@@ -113,28 +180,78 @@ export default function App() {
         gameLoop.current = setInterval(() => {
             setGameState(prevState => {
                 const newState = { ...prevState };
+                const now = Date.now();
+                const deltaTime = (now - lastUpdate.current) / 1000;
+                lastUpdate.current = now;
                 
-                // Update puck position
-                newState.puck.velocity = applyFriction(newState.puck.velocity);
-                newState.puck.position = calculatePuckMovement(newState.puck.position, newState.puck.velocity);
-                
-                // Update enemy positions
-                newState.enemies.forEach(enemy => {
-                    enemy.position = calculateEnemyMovement(enemy.position, newState.puck.position);
+                // Update player positions and frames
+                newState.players = newState.players.map(player => {
+                    let newX = player.position.x + player.velocity.x * deltaTime * 100;
+                    let newY = player.position.y + player.velocity.y * deltaTime * 100;
+                    
+                    // Bounce off walls
+                    if (newX < PLAYER_SIZE/2 || newX > RINK_WIDTH - PLAYER_SIZE/2) {
+                        player.velocity.x *= -1;
+                        player.frame = player.velocity.x > 0 ? SPRITE_FRAMES.FACING_RIGHT : SPRITE_FRAMES.FACING_LEFT;
+                        newX = player.position.x;
+                    }
+                    if (newY < PLAYER_SIZE/2 || newY > RINK_HEIGHT - PLAYER_SIZE/2) {
+                        player.velocity.y *= -1;
+                        newY = player.position.y;
+                    }
+                    
+                    return { ...player, position: { x: newX, y: newY } };
                 });
                 
+                // Update puck position
+                const friction = 0.98;
+                newState.puck.velocity = {
+                    x: newState.puck.velocity.x * friction,
+                    y: newState.puck.velocity.y * friction
+                };
+                
+                newState.puck.position = {
+                    x: Math.max(PUCK_SIZE/2, Math.min(RINK_WIDTH - PUCK_SIZE/2, 
+                        newState.puck.position.x + newState.puck.velocity.x * deltaTime)),
+                    y: Math.max(PUCK_SIZE/2, Math.min(RINK_HEIGHT - PUCK_SIZE/2, 
+                        newState.puck.position.y + newState.puck.velocity.y * deltaTime))
+                };
+                
                 // Check for goals
-                if (checkGoal(newState.puck.position, newState.nets.right)) {
-                    newState.score += 1;
-                    newState.puck.position = { x: GAME_CONSTANTS.SCREEN_WIDTH / 2, y: GAME_CONSTANTS.SCREEN_HEIGHT / 2 };
-                    newState.puck.velocity = { x: 0, y: 0 };
+                if (newState.puck.position.y > height/2 - GOAL_HEIGHT/2 && 
+                    newState.puck.position.y < height/2 + GOAL_HEIGHT/2) {
+                    if (newState.puck.position.x < GOAL_WIDTH/2) {
+                        // Goal scored on left side
+                        newState.score += 1;
+                        newState.puck.position = { x: width/2, y: height/2 };
+                        newState.puck.velocity = { x: 0, y: 0 };
+                    } else if (newState.puck.position.x > width - GOAL_WIDTH/2) {
+                        // Goal scored on right side
+                        newState.score -= 1;
+                        newState.puck.position = { x: width/2, y: height/2 };
+                        newState.puck.velocity = { x: 0, y: 0 };
+                    }
                 }
+                
+                // Update goalie animations
+                newState.goalies = newState.goalies.map(goalie => {
+                    const puckDist = Math.abs(newState.puck.position.y - goalie.position.y);
+                    if (puckDist < GOAL_HEIGHT/4) {
+                        return { ...goalie, frame: GOALIE_FRAMES.DIVING_RIGHT };
+                    } else if (puckDist < GOAL_HEIGHT/2) {
+                        return { ...goalie, frame: GOALIE_FRAMES.DIVING_LEFT };
+                    }
+                    return { ...goalie, frame: GOALIE_FRAMES.STANDING };
+                });
                 
                 // Update game time
                 if (newState.gameTime > 0) {
-                    newState.gameTime -= 1;
+                    newState.gameTime -= deltaTime;
                 } else {
                     newState.isGameOver = true;
+                    if (gameLoop.current) {
+                        clearInterval(gameLoop.current);
+                    }
                 }
                 
                 return newState;
@@ -155,9 +272,10 @@ export default function App() {
             <View style={styles.welcomeContainer}>
                 <Text style={styles.title}>Hockey Game</Text>
                 <Text style={styles.instructions}>
-                    Tap a player to control them{'\n'}
-                    Swipe to hit the puck{'\n'}
-                    Score goals to win!
+                    Tap and drag blue players to move them{'\n'}
+                    Release to shoot the puck{'\n'}
+                    Score goals to win!{'\n'}
+                    Game duration: 5 minutes
                 </Text>
                 <TouchableOpacity style={styles.startButton} onPress={startGame}>
                     <Text style={styles.startButtonText}>Start Game</Text>
@@ -168,63 +286,93 @@ export default function App() {
 
     return (
         <GestureHandlerRootView style={styles.container} {...panResponder.panHandlers}>
-            <Image source={assets.rinkImage} style={styles.rink} resizeMode="cover" />
+            <Image source={assets.rink} style={styles.rink} resizeMode="cover" />
+            
+            {/* Goals */}
+            <Image
+                source={assets.goalNet}
+                style={[styles.goal, { left: -GOAL_WIDTH/2 }]}
+            />
+            <Image
+                source={assets.goalNet}
+                style={[styles.goal, { right: -GOAL_WIDTH/2, transform: [{ scaleX: -1 }] }]}
+            />
             
             {/* Score and Timer */}
             <View style={styles.gameInfo}>
                 <Text style={styles.score}>Score: {gameState.score}</Text>
-                <Text style={styles.timer}>Time: {Math.floor(gameState.gameTime / 60)}:{(gameState.gameTime % 60).toString().padStart(2, '0')}</Text>
+                <Text style={styles.timer}>
+                    Time: {Math.floor(gameState.gameTime / 60)}:
+                    {Math.floor(gameState.gameTime % 60).toString().padStart(2, '0')}
+                </Text>
             </View>
             
-            {/* Game Objects */}
+            {/* Goalies */}
+            {gameState.goalies.map(goalie => (
+                <Image
+                    key={goalie.id}
+                    source={assets.goalieSprites}
+                    style={[
+                        styles.goalie,
+                        {
+                            left: goalie.position.x - PLAYER_SIZE/2,
+                            top: goalie.position.y - PLAYER_SIZE/2,
+                            width: PLAYER_SIZE,
+                            height: PLAYER_SIZE
+                        }
+                    ]}
+                    resizeMode="cover"
+                />
+            ))}
+            
+            {/* Red Players */}
             {gameState.players.map(player => (
-                <TouchableOpacity
+                <Image
                     key={player.id}
-                    onPress={() => setGameState(prevState => ({ ...prevState, selectedPlayer: player.id }))}
+                    source={assets.playerSprites}
                     style={[
                         styles.player,
                         {
-                            left: player.position.x - GAME_CONSTANTS.PLAYER_SIZE / 2,
-                            top: player.position.y - GAME_CONSTANTS.PLAYER_SIZE / 2,
-                        },
+                            left: player.position.x - PLAYER_SIZE/2,
+                            top: player.position.y - PLAYER_SIZE/2,
+                            width: PLAYER_SIZE,
+                            height: PLAYER_SIZE
+                        }
                     ]}
-                >
-                    <Image 
-                        source={assets.playerImage} 
-                        style={[
-                            styles.playerImage,
-                            gameState.selectedPlayer === player.id && styles.selectedPlayer
-                        ]} 
-                    />
-                </TouchableOpacity>
+                />
             ))}
             
+            {/* Blue Players */}
             {gameState.enemies.map(enemy => (
-                <View
+                <Image
                     key={enemy.id}
+                    source={assets.enemySprites}
                     style={[
                         styles.enemy,
                         {
-                            left: enemy.position.x - GAME_CONSTANTS.ENEMY_SIZE / 2,
-                            top: enemy.position.y - GAME_CONSTANTS.ENEMY_SIZE / 2,
-                        },
+                            left: enemy.position.x - PLAYER_SIZE/2,
+                            top: enemy.position.y - PLAYER_SIZE/2,
+                            width: PLAYER_SIZE,
+                            height: PLAYER_SIZE,
+                            opacity: enemy.isSelected ? 0.8 : 1
+                        }
                     ]}
-                >
-                    <Image source={assets.enemyImage} style={styles.enemyImage} />
-                </View>
+                />
             ))}
             
-            <View
+            {/* Puck */}
+            <Image
+                source={assets.puck}
                 style={[
                     styles.puck,
                     {
-                        left: gameState.puck.position.x - GAME_CONSTANTS.PUCK_SIZE / 2,
-                        top: gameState.puck.position.y - GAME_CONSTANTS.PUCK_SIZE / 2,
-                    },
+                        left: gameState.puck.position.x - PUCK_SIZE/2,
+                        top: gameState.puck.position.y - PUCK_SIZE/2,
+                        width: PUCK_SIZE,
+                        height: PUCK_SIZE
+                    }
                 ]}
-            >
-                <Image source={assets.puckImage} style={styles.puckImage} />
-            </View>
+            />
             
             {/* Game Over Screen */}
             {gameState.isGameOver && (
@@ -243,13 +391,13 @@ export default function App() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: GAME_CONSTANTS.ICE_COLOR,
+        backgroundColor: '#F0F8FF',
     },
     welcomeContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: GAME_CONSTANTS.ICE_COLOR,
+        backgroundColor: '#F0F8FF',
     },
     title: {
         fontSize: 48,
@@ -273,8 +421,8 @@ const styles = StyleSheet.create({
     },
     rink: {
         position: 'absolute',
-        width: '100%',
-        height: '100%',
+        width: RINK_WIDTH,
+        height: RINK_HEIGHT,
     },
     gameInfo: {
         position: 'absolute',
@@ -283,49 +431,41 @@ const styles = StyleSheet.create({
         right: 20,
         flexDirection: 'row',
         justifyContent: 'space-between',
+        zIndex: 1,
     },
     score: {
         fontSize: 24,
         fontWeight: 'bold',
         color: 'white',
+        textShadowColor: 'rgba(0, 0, 0, 0.75)',
+        textShadowOffset: { width: -1, height: 1 },
+        textShadowRadius: 10,
     },
     timer: {
         fontSize: 24,
         fontWeight: 'bold',
         color: 'white',
+        textShadowColor: 'rgba(0, 0, 0, 0.75)',
+        textShadowOffset: { width: -1, height: 1 },
+        textShadowRadius: 10,
     },
     player: {
         position: 'absolute',
-        width: GAME_CONSTANTS.PLAYER_SIZE,
-        height: GAME_CONSTANTS.PLAYER_SIZE,
-    },
-    playerImage: {
-        width: '100%',
-        height: '100%',
-        resizeMode: 'contain',
-    },
-    selectedPlayer: {
-        tintColor: '#FFD700',
     },
     enemy: {
         position: 'absolute',
-        width: GAME_CONSTANTS.ENEMY_SIZE,
-        height: GAME_CONSTANTS.ENEMY_SIZE,
     },
-    enemyImage: {
-        width: '100%',
-        height: '100%',
-        resizeMode: 'contain',
+    goalie: {
+        position: 'absolute',
     },
     puck: {
         position: 'absolute',
-        width: GAME_CONSTANTS.PUCK_SIZE,
-        height: GAME_CONSTANTS.PUCK_SIZE,
     },
-    puckImage: {
-        width: '100%',
-        height: '100%',
-        resizeMode: 'contain',
+    goal: {
+        position: 'absolute',
+        width: GOAL_WIDTH,
+        height: GOAL_HEIGHT,
+        top: (RINK_HEIGHT - GOAL_HEIGHT) / 2,
     },
     gameOverContainer: {
         position: 'absolute',

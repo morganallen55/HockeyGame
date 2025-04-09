@@ -1,32 +1,36 @@
-import Matter from "matter-js";
-import { View, Image } from "react-native";
-import enemyImage from "../assets/enemy.png";
+import React from 'react';
+import { View } from 'react-native';
+import { GAME_CONSTANTS } from '../constants';
+import Sprite from './Sprite';
 
-const Enemy = (props) => {
-  const { body } = props;
-  const width = body.bounds.max.x - body.bounds.min.x;
-  const height = body.bounds.max.y - body.bounds.min.y;
-  const x = body.position.x - width / 2;
-  const y = body.position.y - height / 2;
+const SPRITE_SIZE = 16;
+const SCALE_FACTOR = GAME_CONSTANTS.ENEMY_SIZE / SPRITE_SIZE;
 
-  return (
-    <View
-      style={{
-        position: "absolute",
-        left: x,
-        top: y,
-        width: width,
-        height: height,
-      }}
-    >
-      <Image source={enemyImage} style={{ width, height }} />
-    </View>
-  );
+const Enemy = ({ position, direction, spriteSheet, frameY = 1 }) => {
+    // Determine if we should flip the sprite based on direction
+    const flip = direction === 'left';
+    
+    return (
+        <View
+            style={{
+                position: 'absolute',
+                left: position.x - GAME_CONSTANTS.ENEMY_SIZE / 2,
+                top: position.y - GAME_CONSTANTS.ENEMY_SIZE / 2,
+                width: GAME_CONSTANTS.ENEMY_SIZE,
+                height: GAME_CONSTANTS.ENEMY_SIZE,
+                justifyContent: 'center',
+                alignItems: 'center',
+            }}
+        >
+            <Sprite 
+                spriteSheet={spriteSheet} 
+                frameY={frameY} 
+                frameX={'animate'} 
+                scale={SCALE_FACTOR}
+                flip={flip}
+            />
+        </View>
+    );
 };
 
-export default (world, x, y) => {
-  let body = Matter.Bodies.rectangle(x, y, 50, 50, { label: "Enemy" });
-  Matter.World.add(world, body);
-
-  return { body, renderer: <Enemy /> };
-};
+export default Enemy;

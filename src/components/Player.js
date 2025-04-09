@@ -1,32 +1,47 @@
-import Matter from "matter-js";
-import { View, Image } from "react-native";
-import playerImage from "../assets/player.png";
+import React from 'react';
+import { View } from 'react-native';
+import { GAME_CONSTANTS, SPRITE_FRAMES } from '../constants';
+import Sprite from './Sprite';
 
-const Player = (props) => {
-  const { body } = props;
-  const width = body.bounds.max.x - body.bounds.min.x;
-  const height = body.bounds.max.y - body.bounds.min.y;
-  const x = body.position.x - width / 2;
-  const y = body.position.y - height / 2;
+const SPRITE_SIZE = 16;
+const SCALE_FACTOR = GAME_CONSTANTS.PLAYER_SIZE / SPRITE_SIZE;
 
-  return (
-    <View
-      style={{
-        position: "absolute",
-        left: x,
-        top: y,
-        width: width,
-        height: height,
-      }}
-    >
-      <Image source={playerImage} style={{ width, height }} />
-    </View>
-  );
+const Player = ({ position, direction, isShooting, spriteSheet }) => {
+    // Determine which row of sprites to use based on player state
+    let frameY = 0; // Default to blue player
+    
+    // Determine if we should flip the sprite based on direction
+    const flip = direction === 'left';
+    
+    // Determine which frame to use
+    let frameX = 'animate'; // Default to animation
+    
+    // If shooting, use a static frame
+    if (isShooting) {
+        frameX = flip ? SPRITE_FRAMES.SHOOTING_LEFT : SPRITE_FRAMES.SHOOTING_RIGHT;
+    }
+    
+    return (
+        <View
+            style={{
+                position: 'absolute',
+                left: position.x - GAME_CONSTANTS.PLAYER_SIZE / 2,
+                top: position.y - GAME_CONSTANTS.PLAYER_SIZE / 2,
+                width: GAME_CONSTANTS.PLAYER_SIZE,
+                height: GAME_CONSTANTS.PLAYER_SIZE,
+                justifyContent: 'center',
+                alignItems: 'center',
+            }}
+        >
+            <Sprite 
+                spriteSheet={spriteSheet} 
+                frameY={frameY} 
+                frameX={frameX} 
+                scale={SCALE_FACTOR}
+                flip={flip}
+            />
+        </View>
+    );
 };
 
-export default (world, x, y) => {
-  let body = Matter.Bodies.rectangle(x, y, 50, 50, { label: "Player" });
-  Matter.World.add(world, body);
-
-  return { body, renderer: <Player /> };
-};
+export default Player;

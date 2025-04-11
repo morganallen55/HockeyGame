@@ -3,61 +3,65 @@ import { Dimensions } from 'react-native';
 const { width, height } = Dimensions.get('window');
 
 export const GAME_CONSTANTS = {
-    // Screen dimensions
-    SCREEN_WIDTH: width,
-    SCREEN_HEIGHT: height,
-    
-    // Game objects
-    PLAYER_SIZE: 50,
-    ENEMY_SIZE: 50,
-    PUCK_SIZE: 20,
-    GOALIE_SIZE: 60,
-    GOAL_WIDTH: 100,
-    GOAL_HEIGHT: 60,
-    GOAL_DEPTH: 20,
-    
-    // Physics
-    FRICTION: 0.98,
-    PUCK_SPEED: 15,
-    PLAYER_SPEED: 8,
-    ENEMY_SPEED: 6,
-    SHOOTING_POWER: 15,
-    
-    // Colors
-    ICE_COLOR: '#E8F4F8',
-    RINK_BORDER: '#1E3A8A',
-    PLAYER_COLOR: '#FF0000',
-    ENEMY_COLOR: '#0000FF',
-    PUCK_COLOR: '#000000',
-    
-    // Game settings
-    SCORE_TO_WIN: 5,
-    GAME_DURATION: 180, // 3 minutes in seconds
-    RINK_WIDTH: 800,
-    RINK_HEIGHT: 400,
-};
+  SCREEN_WIDTH: width,
+  SCREEN_HEIGHT: height,
 
-export const SPRITE_FRAMES = {
-    FACING_RIGHT: 0,
-    FACING_LEFT: 1,
-    SHOOTING_RIGHT: 2,
-    SHOOTING_LEFT: 3
-};
+  RINK_WIDTH: width * 0.95,
+  RINK_HEIGHT: height * 0.75,
 
-export const GOALIE_FRAMES = {
-    STANDING: 0,
-    DIVING_RIGHT: 1,
-    DIVING_LEFT: 2
+  PLAYER_WIDTH: 48,
+  PLAYER_HEIGHT: 48,
+  PLAYER_SPEED: 5,
+  PLAYER_SIZE: 48,
+
+  ENEMY_WIDTH: 48,
+  ENEMY_HEIGHT: 48,
+  ENEMY_SPEED: 4,
+  ENEMY_SIZE: 48,
+
+  PUCK_SIZE: 24,
+  PUCK_SPEED: 8,
+
+  GOALIE_WIDTH: 48,
+  GOALIE_HEIGHT: 48,
+  GOALIE_SIZE: 48,
+  GOALIE_SPEED: 3,
+
+  GOAL_WIDTH: 120,
+  GOAL_HEIGHT: 60,
+  GOAL_DEPTH: 30,
+
+  FRICTION: 0.98,
+  SHOOTING_POWER: 15,
+
+  GAME_DURATION: 180,
+
+  GAME_STATES: {
+    MENU: 'menu',
+    PLAYING: 'playing',
+    PAUSED: 'paused',
+    GAME_OVER: 'gameOver'
+  },
+
+  DIRECTIONS: {
+    LEFT: 'left',
+    RIGHT: 'right',
+    UP: 'up',
+    DOWN: 'down'
+  },
+
+  ICE_COLOR: '#f0f8ff',
+  BOUNDARY_PADDING: 20
 };
 
 export const PLAYER_POSITIONS = {
-    PLAYER1: { x: width * 0.3, y: height * 0.5 },
-    PLAYER2: { x: width * 0.4, y: height * 0.5 },
-    ENEMY1: { x: width * 0.6, y: height * 0.3 },
-    ENEMY2: { x: width * 0.7, y: height * 0.7 }
+  PLAYER1: { x: width * 0.3, y: height * 0.3 },
+  PLAYER2: { x: width * 0.7, y: height * 0.3 },
+  ENEMY1: { x: width * 0.3, y: height * 0.6 },
+  ENEMY2: { x: width * 0.7, y: height * 0.6 }
 };
 
 export const NET_POSITIONS = {
-    LEFT: { x: 50, y: height * 0.5 - 40 },
-    RIGHT: { x: width - 150, y: height * 0.5 - 40 }
+  TOP: { x: width / 2 - GAME_CONSTANTS.GOAL_WIDTH / 2, y: 0 },
+  BOTTOM: { x: width / 2 - GAME_CONSTANTS.GOAL_WIDTH / 2, y: GAME_CONSTANTS.RINK_HEIGHT - GAME_CONSTANTS.GOAL_HEIGHT }
 };

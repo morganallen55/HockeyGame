@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, TouchableOpacity, Text, Dimensions } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Text } from 'react-native';
 import { GameEngine } from 'react-native-game-engine';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Matter from 'matter-js';
+
 import createGameEntities from './src/entities';
 import Physics from './src/physics';
 import { GAME_CONSTANTS } from './src/constants';
@@ -55,10 +56,6 @@ export default function App() {
     });
   };
 
-  const onUpdateGameState = (updateFn) => {
-    setEntities((prevEntities) => updateFn(prevEntities));
-  };
-
   useEffect(() => {
     if (!running) return;
     if (gameTime <= 0) {
@@ -104,7 +101,14 @@ export default function App() {
           }
         }}
       >
-        {entities.player1 && <GameBoard gameState={entities} onUpdateGameState={onUpdateGameState} />}
+        {entities.player1 && (
+          <GameBoard
+            gameState={entities}
+            onUpdateGameState={(updateFn) =>
+              setEntities(prev => updateFn(prev))
+            }
+          />
+        )}
       </GameEngine>
 
       {gameOver && (
@@ -200,4 +204,3 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
-

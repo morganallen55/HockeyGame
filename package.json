@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@expo/vector-icons": "^14.0.0",
+    "@fustaro/react-native-axis-pad": "^0.7.0",
     "expo": "~52.0.0",
     "expo-splash-screen": "~0.29.22",
     "expo-status-bar": "~2.0.1",

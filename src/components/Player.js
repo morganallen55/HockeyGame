@@ -1,32 +1,16 @@
-import React, { useState } from 'react';
-import { View, Image, StyleSheet, PanResponder } from 'react-native';
+import React from 'react';
+import { View, Image, StyleSheet } from 'react-native';
 import playerImage from '../assets/player.png';
 import { GAME_CONSTANTS } from '../constants';
 
-const Player = ({ body, isSelected, onDrag }) => {
-  const [position, setPosition] = useState({ x: body.position.x, y: body.position.y });
-
-  const panResponder = PanResponder.create({
-    onStartShouldSetPanResponder: () => true,
-    onPanResponderMove: (e, gestureState) => {
-      const newX = position.x + gestureState.dx;
-      const newY = position.y + gestureState.dy;
-      setPosition({ x: newX, y: newY });
-      if (onDrag) onDrag(newX, newY);
-    },
-    onPanResponderRelease: () => {
-      // Handle release logic if needed
-    },
-  });
-
+const Player = ({ body, isSelected }) => {
   const width = body.bounds.max.x - body.bounds.min.x;
   const height = body.bounds.max.y - body.bounds.min.y;
-  const x = position.x - width / 2;
-  const y = position.y - height / 2;
+  const x = body.position.x - width / 2;
+  const y = body.position.y - height / 2;
 
   return (
     <View
-      {...panResponder.panHandlers}
       style={[
         styles.container,
         { left: x, top: y },

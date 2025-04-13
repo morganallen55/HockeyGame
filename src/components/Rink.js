@@ -12,8 +12,6 @@ const Rink = () => {
         </View>
         <View style={[styles.blueLine, { top: '25%' }]} />
         <View style={[styles.blueLine, { bottom: '25%' }]} />
-
-        {/* Goals visual only */}
         <View style={[styles.goal, styles.topGoal]} />
         <View style={[styles.goal, styles.bottomGoal]} />
       </View>
@@ -27,7 +25,7 @@ const styles = StyleSheet.create({
     height: GAME_CONSTANTS.RINK_HEIGHT,
     alignSelf: 'center',
     marginTop: 10,
-    marginBottom: 100, // to make room for pause/reset
+    marginBottom: 100,
     position: 'relative',
   },
   rinkSurface: {

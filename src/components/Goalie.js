@@ -1,10 +1,9 @@
-// src/components/Goalie.js
 import React from 'react';
 import { View, Image, StyleSheet } from 'react-native';
 import goalieImage from '../assets/goalie.png';
 import { GAME_CONSTANTS } from '../constants';
 
-const Goalie = ({ body, flip }) => {
+const Goalie = ({ body, isFlipped }) => {
   const width = body.bounds.max.x - body.bounds.min.x;
   const height = body.bounds.max.y - body.bounds.min.y;
   const x = body.position.x - width / 2;
@@ -16,7 +15,7 @@ const Goalie = ({ body, flip }) => {
         source={goalieImage}
         style={[
           styles.image,
-          flip && { transform: [{ scaleX: -1 }] }
+          isFlipped && { transform: [{ scaleY: -1 }] },
         ]}
       />
     </View>

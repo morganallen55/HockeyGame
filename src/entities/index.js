@@ -2,7 +2,7 @@ import Matter from "matter-js";
 import {
   GAME_CONSTANTS,
   PLAYER_POSITIONS,
-  NET_POSITIONS
+  NET_POSITIONS,
 } from "../constants";
 import Player from "../components/Player";
 import Enemy from "../components/Enemy";
@@ -12,63 +12,55 @@ import Goal from "../components/Goal";
 
 const createGameEntities = () => {
   const engine = Matter.Engine.create({ enableSleeping: false });
+  engine.world.gravity.y = 0; // Disable gravity
   const world = engine.world;
 
-  const getSafePosition = (pos, fallback) =>
-    !pos || pos.x == null || pos.y == null ? fallback : pos;
-
-  const pos1 = getSafePosition(PLAYER_POSITIONS.PLAYER1, { x: 200, y: 300 });
-  const pos2 = getSafePosition(PLAYER_POSITIONS.PLAYER2, { x: 300, y: 300 });
-
   const player1 = Matter.Bodies.rectangle(
-    pos1.x,
-    pos1.y,
+    PLAYER_POSITIONS.PLAYER1.x,
+    PLAYER_POSITIONS.PLAYER1.y,
     GAME_CONSTANTS.PLAYER_WIDTH,
     GAME_CONSTANTS.PLAYER_HEIGHT,
     { label: "player1" }
   );
+
   const player2 = Matter.Bodies.rectangle(
-    pos2.x,
-    pos2.y,
+    PLAYER_POSITIONS.PLAYER2.x,
+    PLAYER_POSITIONS.PLAYER2.y,
     GAME_CONSTANTS.PLAYER_WIDTH,
     GAME_CONSTANTS.PLAYER_HEIGHT,
     { label: "player2" }
   );
 
-  const e1 = getSafePosition(PLAYER_POSITIONS.ENEMY1, { x: 200, y: 500 });
-  const e2 = getSafePosition(PLAYER_POSITIONS.ENEMY2, { x: 300, y: 500 });
-
   const enemy1 = Matter.Bodies.rectangle(
-    e1.x,
-    e1.y,
+    PLAYER_POSITIONS.ENEMY1.x,
+    PLAYER_POSITIONS.ENEMY1.y,
     GAME_CONSTANTS.ENEMY_WIDTH,
     GAME_CONSTANTS.ENEMY_HEIGHT,
-    { label: "enemy1" }
-  );
-  const enemy2 = Matter.Bodies.rectangle(
-    e2.x,
-    e2.y,
-    GAME_CONSTANTS.ENEMY_WIDTH,
-    GAME_CONSTANTS.ENEMY_HEIGHT,
-    { label: "enemy2" }
+    { label: "enemy1", frictionAir: 0.05 }
   );
 
-  const g1 = getSafePosition(NET_POSITIONS.TOP, { x: 400, y: 30 });
-  const g2 = getSafePosition(NET_POSITIONS.BOTTOM, { x: 400, y: 730 });
+  const enemy2 = Matter.Bodies.rectangle(
+    PLAYER_POSITIONS.ENEMY2.x,
+    PLAYER_POSITIONS.ENEMY2.y,
+    GAME_CONSTANTS.ENEMY_WIDTH,
+    GAME_CONSTANTS.ENEMY_HEIGHT,
+    { label: "enemy2", frictionAir: 0.05 }
+  );
 
   const goalie1 = Matter.Bodies.rectangle(
-    g1.x + GAME_CONSTANTS.GOAL_WIDTH / 2,
-    g1.y + GAME_CONSTANTS.GOAL_HEIGHT + 10,
+    NET_POSITIONS.TOP.x + GAME_CONSTANTS.GOAL_WIDTH / 2,
+    NET_POSITIONS.TOP.y + GAME_CONSTANTS.GOAL_HEIGHT + 10,
     GAME_CONSTANTS.GOALIE_SIZE,
     GAME_CONSTANTS.GOALIE_SIZE,
-    { label: "goalie1", isStatic: true }
+    { label: "goalie1", isStatic: false }
   );
+
   const goalie2 = Matter.Bodies.rectangle(
-    g2.x + GAME_CONSTANTS.GOAL_WIDTH / 2,
-    g2.y - 10,
+    NET_POSITIONS.BOTTOM.x + GAME_CONSTANTS.GOAL_WIDTH / 2,
+    NET_POSITIONS.BOTTOM.y - 10,
     GAME_CONSTANTS.GOALIE_SIZE,
     GAME_CONSTANTS.GOALIE_SIZE,
-    { label: "goalie2", isStatic: true }
+    { label: "goalie2", isStatic: false }
   );
 
   const puck = Matter.Bodies.circle(
@@ -78,11 +70,19 @@ const createGameEntities = () => {
     {
       label: "puck",
       restitution: 0.9,
-      frictionAir: 0.01
+      frictionAir: 0.01,
     }
   );
 
-  Matter.World.add(world, [player1, player2, enemy1, enemy2, goalie1, goalie2, puck]);
+  Matter.World.add(world, [
+    player1,
+    player2,
+    enemy1,
+    enemy2,
+    goalie1,
+    goalie2,
+    puck,
+  ]);
 
   return {
     physics: { engine, world },
@@ -93,8 +93,16 @@ const createGameEntities = () => {
     goalie1: { body: goalie1, renderer: Goalie },
     goalie2: { body: goalie2, renderer: Goalie },
     puck: { body: puck, renderer: Puck },
-    goal1: { position: NET_POSITIONS.TOP, isLeft: true, renderer: Goal },
-    goal2: { position: NET_POSITIONS.BOTTOM, isLeft: false, renderer: Goal }
+    goal1: {
+      position: NET_POSITIONS.TOP,
+      isLeft: true,
+      renderer: Goal,
+    },
+    goal2: {
+      position: NET_POSITIONS.BOTTOM,
+      isLeft: false,
+      renderer: Goal,
+    },
   };
 };
 

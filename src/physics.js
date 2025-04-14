@@ -1,5 +1,5 @@
 import Matter from "matter-js";
-import { GAME_CONSTANTS } from "./constants/constants";
+import { GAME_CONSTANTS, PLAYER_POSITIONS } from "./constants/constants";
 
 let lastGoalTime = 0;
 
@@ -90,6 +90,17 @@ const Physics = (entities, { time, touches, dispatch }) => {
   Matter.Body.translate(e1, { x: dir1 * 1.5, y: 0 });
   Matter.Body.translate(e2, { x: dir2 * 1.5, y: 0 });
 
+  // === Goalie movement ===
+  Matter.Body.setPosition(entities.goalie1.body, {
+    x: GAME_CONSTANTS.SCREEN_WIDTH / 2 + 40 * Math.sin(time.current / 400),
+    y: GAME_CONSTANTS.GOAL_HEIGHT + 15,
+  });
+
+  Matter.Body.setPosition(entities.goalie2.body, {
+    x: GAME_CONSTANTS.SCREEN_WIDTH / 2 + 40 * Math.sin(time.current / 400),
+    y: GAME_CONSTANTS.SCREEN_HEIGHT - GAME_CONSTANTS.GOAL_HEIGHT - 15,
+  });
+
   // Goal Detection
   const currentTime = Date.now();
   const cooldown = 1200;
@@ -98,28 +109,66 @@ const Physics = (entities, { time, touches, dispatch }) => {
     x: (GAME_CONSTANTS.SCREEN_WIDTH - GAME_CONSTANTS.GOAL_WIDTH) / 2,
     y: 0,
     width: GAME_CONSTANTS.GOAL_WIDTH,
-    height: GAME_CONSTANTS.GOAL_HEIGHT + 40,
+    height: GAME_CONSTANTS.GOAL_HEIGHT + 50, // Adjusted to ensure full coverage of the black square
   };
 
   const goalBottom = {
     ...goalTop,
-    y: GAME_CONSTANTS.SCREEN_HEIGHT - (GAME_CONSTANTS.GOAL_HEIGHT + 40),
+    y: GAME_CONSTANTS.SCREEN_HEIGHT - (GAME_CONSTANTS.GOAL_HEIGHT + 50),
   };
 
   const isInsideGoal = (goal) =>
     puckBody.position.x >= goal.x &&
     puckBody.position.x <= goal.x + goal.width &&
     puckBody.position.y >= goal.y &&
-    puckBody.position.y <= goal.y + goal.height;
+    puckBody.position.y <= goal.y + goal.height; // Detects puck in any part of the goal area
 
   if (isInsideGoal(goalTop) && currentTime - lastGoalTime > cooldown) {
     lastGoalTime = currentTime;
     dispatch({ type: "goal", team: "enemy" });
+
+    // Reset players and puck to starting positions
+    Matter.Body.setPosition(puckBody, {
+      x: GAME_CONSTANTS.SCREEN_WIDTH / 2,
+      y: GAME_CONSTANTS.SCREEN_HEIGHT / 2,
+    });
+    Matter.Body.setVelocity(puckBody, { x: 0, y: 0 });
+
+    Matter.Body.setPosition(p1, {
+      x: PLAYER_POSITIONS.PLAYER1.x,
+      y: PLAYER_POSITIONS.PLAYER1.y,
+    });
+    Matter.Body.setVelocity(p1, { x: 0, y: 0 });
+
+    Matter.Body.setPosition(p2, {
+      x: PLAYER_POSITIONS.PLAYER2.x,
+      y: PLAYER_POSITIONS.PLAYER2.y,
+    });
+    Matter.Body.setVelocity(p2, { x: 0, y: 0 });
   }
 
   if (isInsideGoal(goalBottom) && currentTime - lastGoalTime > cooldown) {
     lastGoalTime = currentTime;
     dispatch({ type: "goal", team: "player" });
+
+    // Reset players and puck to starting positions
+    Matter.Body.setPosition(puckBody, {
+      x: GAME_CONSTANTS.SCREEN_WIDTH / 2,
+      y: GAME_CONSTANTS.SCREEN_HEIGHT / 2,
+    });
+    Matter.Body.setVelocity(puckBody, { x: 0, y: 0 });
+
+    Matter.Body.setPosition(p1, {
+      x: PLAYER_POSITIONS.PLAYER1.x,
+      y: PLAYER_POSITIONS.PLAYER1.y,
+    });
+    Matter.Body.setVelocity(p1, { x: 0, y: 0 });
+
+    Matter.Body.setPosition(p2, {
+      x: PLAYER_POSITIONS.PLAYER2.x,
+      y: PLAYER_POSITIONS.PLAYER2.y,
+    });
+    Matter.Body.setVelocity(p2, { x: 0, y: 0 });
   }
 
   return entities;

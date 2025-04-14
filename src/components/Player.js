@@ -14,13 +14,23 @@ const Player = ({ body, isSelected, onTap }) => {
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onPanResponderGrant: (evt) => {
-        if (onTap) onTap();
+        if (onTap) onTap(); // Register tap-to-select
       },
       onPanResponderMove: (evt, gestureState) => {
         if (isSelected) {
-          const newX = evt.nativeEvent.pageX;
-          const newY = evt.nativeEvent.pageY;
-          Matter.Body.setPosition(body, { x: newX, y: newY });
+          const moveX = evt.nativeEvent.pageX;
+          const moveY = evt.nativeEvent.pageY;
+
+          // Smooth drag — interpolate to target
+          const lerp = (start, end, factor) => start + (end - start) * factor;
+
+          const newX = lerp(body.position.x, moveX, 0.2);
+          const newY = lerp(body.position.y, moveY, 0.2);
+
+          Matter.Body.setPosition(body, {
+            x: newX,
+            y: newY,
+          });
         }
       },
       onPanResponderRelease: () => {},

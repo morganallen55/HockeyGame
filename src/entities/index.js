@@ -23,14 +23,6 @@ const createGameEntities = () => {
     { label: "player1" }
   );
 
-  const player2 = Matter.Bodies.rectangle(
-    PLAYER_POSITIONS.PLAYER2.x,
-    PLAYER_POSITIONS.PLAYER2.y,
-    GAME_CONSTANTS.PLAYER_WIDTH,
-    GAME_CONSTANTS.PLAYER_HEIGHT,
-    { label: "player2" }
-  );
-
   const enemy1 = Matter.Bodies.rectangle(
     PLAYER_POSITIONS.ENEMY1.x,
     PLAYER_POSITIONS.ENEMY1.y,
@@ -74,20 +66,11 @@ const createGameEntities = () => {
     }
   );
 
-  Matter.World.add(world, [
-    player1,
-    player2,
-    enemy1,
-    enemy2,
-    goalie1,
-    goalie2,
-    puck,
-  ]);
+  Matter.World.add(world, [player1, enemy1, enemy2, goalie1, goalie2, puck]);
 
   return {
     physics: { engine, world },
     player1: { body: player1, renderer: Player },
-    player2: { body: player2, renderer: Player },
     enemy1: { body: enemy1, renderer: Enemy },
     enemy2: { body: enemy2, renderer: Enemy },
     goalie1: { body: goalie1, renderer: Goalie },

@@ -14,16 +14,11 @@ const GameBoard = ({ gameState, onSelectPlayer }) => {
     <View style={styles.container}>
       <Rink />
 
-      {/* Players */}
+      {/* Player (Only One Now) */}
       <Player
         body={gameState.player1.body}
         isSelected={selectedPlayer === 'player1'}
         onTap={() => onSelectPlayer('player1')}
-      />
-      <Player
-        body={gameState.player2.body}
-        isSelected={selectedPlayer === 'player2'}
-        onTap={() => onSelectPlayer('player2')}
       />
 
       {/* Enemies */}

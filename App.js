@@ -21,6 +21,7 @@ export default function App() {
   const [score, setScore] = useState({ player: 0, enemy: 0 });
   const [gameTime, setGameTime] = useState(GAME_CONSTANTS.GAME_DURATION);
   const [winner, setWinner] = useState('');
+  const [showGoalText, setShowGoalText] = useState(false);
 
   const startGame = () => {
     const newEntities = createGameEntities();
@@ -45,7 +46,10 @@ export default function App() {
   };
 
   const onGoal = (team) => {
-    setScore(prev => {
+    setShowGoalText(true);
+    setTimeout(() => setShowGoalText(false), 1000);
+
+    setScore((prev) => {
       const updated = { ...prev, [team]: prev[team] + 1 };
       if (updated[team] >= SCORE_CAP) {
         setWinner(team === 'player' ? 'You Win!' : 'Enemy Wins!');
@@ -54,6 +58,15 @@ export default function App() {
       }
       return updated;
     });
+
+    // Reset puck position after goal
+    if (entities.puck?.body) {
+      Matter.Body.setPosition(entities.puck.body, {
+        x: GAME_CONSTANTS.SCREEN_WIDTH / 2,
+        y: GAME_CONSTANTS.SCREEN_HEIGHT / 2,
+      });
+      Matter.Body.setVelocity(entities.puck.body, { x: 0, y: 0 });
+    }
   };
 
   useEffect(() => {
@@ -66,7 +79,7 @@ export default function App() {
     }
 
     const interval = setInterval(() => {
-      setGameTime(prev => prev - 1);
+      setGameTime((prev) => prev - 1);
     }, 1000);
 
     return () => clearInterval(interval);
@@ -79,7 +92,7 @@ export default function App() {
   };
 
   const handleSelectPlayer = (playerId) => {
-    setEntities(prev => ({
+    setEntities((prev) => ({
       ...prev,
       selectedPlayer: playerId,
     }));
@@ -113,6 +126,12 @@ export default function App() {
           />
         )}
       </GameEngine>
+
+      {showGoalText && (
+        <View style={styles.goalTextOverlay}>
+          <Text style={styles.goalText}>GOAL!</Text>
+        </View>
+      )}
 
       {gameOver && (
         <View style={styles.gameOverOverlay}>
@@ -172,5 +191,21 @@ const styles = StyleSheet.create({
     fontSize: 20,
     color: '#00f',
     textDecorationLine: 'underline',
+  },
+  goalTextOverlay: {
+    position: 'absolute',
+    top: '40%',
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    zIndex: 20,
+  },
+  goalText: {
+    fontSize: 48,
+    color: '#FFD700',
+    fontWeight: 'bold',
+    textShadowColor: 'black',
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 6,
   },
 });

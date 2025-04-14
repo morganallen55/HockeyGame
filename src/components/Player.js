@@ -12,25 +12,15 @@ const Player = ({ body, isSelected, onTap }) => {
 
   const panResponder = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: () => isSelected,
+      onStartShouldSetPanResponder: () => true,
       onPanResponderGrant: (evt) => {
-        if (onTap) onTap(); // still supports tap-to-select
+        if (onTap) onTap();
       },
       onPanResponderMove: (evt, gestureState) => {
         if (isSelected) {
           const newX = evt.nativeEvent.pageX;
           const newY = evt.nativeEvent.pageY;
-
-          // Soft interpolation to reduce jumpiness
-          const currentX = body.position.x;
-          const currentY = body.position.y;
-          const smoothX = currentX + (newX - currentX) * 0.2;
-          const smoothY = currentY + (newY - currentY) * 0.2;
-
-          Matter.Body.setPosition(body, {
-            x: smoothX,
-            y: smoothY,
-          });
+          Matter.Body.setPosition(body, { x: newX, y: newY });
         }
       },
       onPanResponderRelease: () => {},
@@ -54,8 +44,8 @@ const Player = ({ body, isSelected, onTap }) => {
 const styles = StyleSheet.create({
   container: {
     position: "absolute",
-    width: GAME_CONSTANTS.PLAYER_SIZE,
-    height: GAME_CONSTANTS.PLAYER_SIZE,
+    width: GAME_CONSTANTS.PLAYER_SIZE * 1.2,
+    height: GAME_CONSTANTS.PLAYER_SIZE * 1.2,
   },
   glow: {
     shadowColor: "#FFD700",

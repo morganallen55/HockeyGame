@@ -9,14 +9,14 @@ export const GAME_CONSTANTS = {
   RINK_WIDTH: width * 0.95,
   RINK_HEIGHT: height * 0.75,
 
-  PLAYER_WIDTH: 48,
-  PLAYER_HEIGHT: 48,
-  PLAYER_SPEED: 5,
-  PLAYER_SIZE: 48,
+  PLAYER_WIDTH: 60, // Increased from 48
+  PLAYER_HEIGHT: 60,
+  PLAYER_SPEED: 4,
+  PLAYER_SIZE: 60, // Increased from 48
 
   ENEMY_WIDTH: 48,
   ENEMY_HEIGHT: 48,
-  ENEMY_SPEED: 4,
+  ENEMY_SPEED: 1.5, // Slowed down for easier gameplay
   ENEMY_SIZE: 48,
 
   PUCK_SIZE: 24,
@@ -27,12 +27,12 @@ export const GAME_CONSTANTS = {
   GOALIE_SIZE: 48,
   GOALIE_SPEED: 3,
 
-  GOAL_WIDTH: 120,
-  GOAL_HEIGHT: 60,
+  GOAL_WIDTH: 140, // Widened for easier scoring
+  GOAL_HEIGHT: 70,
   GOAL_DEPTH: 30,
 
   FRICTION: 0.98,
-  SHOOTING_POWER: 15,
+  SHOOTING_POWER: 18, // Boosted for stronger swipes
 
   GAME_DURATION: 180,
 
@@ -55,9 +55,12 @@ export const PLAYER_POSITIONS = {
 };
 
 export const NET_POSITIONS = {
-  TOP: { x: width / 2 - GAME_CONSTANTS.GOAL_WIDTH / 2, y: 0 },
+  TOP: {
+    x: width / 2 - GAME_CONSTANTS.GOAL_WIDTH / 2,
+    y: 0
+  },
   BOTTOM: {
     x: width / 2 - GAME_CONSTANTS.GOAL_WIDTH / 2,
-    y: height - GAME_CONSTANTS.GOAL_HEIGHT - 50 // Moves the bottom goal net up by 50 units
+    y: height - GAME_CONSTANTS.GOAL_HEIGHT - 50
   }
 };

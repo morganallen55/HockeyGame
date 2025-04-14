@@ -1,6 +1,8 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import { GAME_CONSTANTS } from '../constants';
+import { View, StyleSheet, Dimensions } from 'react-native';
+import { GAME_CONSTANTS } from '../constants/constants';
+
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 const Rink = () => {
   return (
@@ -21,12 +23,12 @@ const Rink = () => {
 
 const styles = StyleSheet.create({
   container: {
-    width: GAME_CONSTANTS.RINK_WIDTH,
-    height: GAME_CONSTANTS.RINK_HEIGHT,
+    width: screenWidth,
+    height: screenHeight,
     alignSelf: 'center',
-    marginTop: 10,
-    marginBottom: 100,
-    position: 'relative',
+    position: 'absolute',
+    top: 0,
+    left: 0,
   },
   rinkSurface: {
     flex: 1,
@@ -75,12 +77,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#222',
   },
   topGoal: {
-    top: 0,
-    left: (GAME_CONSTANTS.RINK_WIDTH - GAME_CONSTANTS.GOAL_WIDTH) / 2,
+    top: 20,
+    left: (screenWidth - GAME_CONSTANTS.GOAL_WIDTH) / 2,
   },
   bottomGoal: {
-    bottom: 0,
-    left: (GAME_CONSTANTS.RINK_WIDTH - GAME_CONSTANTS.GOAL_WIDTH) / 2,
+    bottom: 80, // Restored to original position
+    left: (screenWidth - GAME_CONSTANTS.GOAL_WIDTH) / 2,
   },
 });
 

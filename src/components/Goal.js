@@ -1,17 +1,21 @@
 import React from 'react';
 import { View, Image, StyleSheet } from 'react-native';
 import goalImage from '../assets/goal_net.png';
-import { GAME_CONSTANTS } from '../constants';
+import { GAME_CONSTANTS } from '../constants/constants';
 
-const Goal = ({ position, isLeft }) => {
-  const x = position.x;
-  const y = position.y;
+const Goal = ({ position, isLeft, isTopGoal }) => {
+  const x = position.x; // Keep x as it was from the position prop
+  const y = isTopGoal ? 20 : 710; // Adjusted bottom goal y-value to -20
 
   return (
     <View style={[styles.container, { left: x, top: y }]}>
       <Image
         source={goalImage}
-        style={[styles.image, isLeft && { transform: [{ scaleX: -1 }] }]}
+        style={[
+          styles.image,
+          isLeft && { transform: [{ scaleX: -1 }] },
+          !isTopGoal && { transform: [{ scaleY: -1 }] }, // Flip bottom goal vertically
+        ]}
       />
     </View>
   );

@@ -7,17 +7,17 @@ export const GAME_CONSTANTS = {
   SCREEN_HEIGHT: height,
 
   RINK_WIDTH: width * 0.95,
-  RINK_HEIGHT: height * 0.70, // adjusted for space below
+  RINK_HEIGHT: height * 0.75,
 
   PLAYER_WIDTH: 48,
   PLAYER_HEIGHT: 48,
+  PLAYER_SPEED: 5,
   PLAYER_SIZE: 48,
-  PLAYER_SPEED: 2.5, // Joystick speed multiplier
 
   ENEMY_WIDTH: 48,
   ENEMY_HEIGHT: 48,
+  ENEMY_SPEED: 4,
   ENEMY_SIZE: 48,
-  ENEMY_SPEED: 1.5,
 
   PUCK_SIZE: 24,
   PUCK_SPEED: 8,
@@ -34,33 +34,30 @@ export const GAME_CONSTANTS = {
   FRICTION: 0.98,
   SHOOTING_POWER: 15,
 
-  GAME_DURATION: 180, // 3 minutes
+  GAME_DURATION: 180,
 
   GAME_STATES: {
     MENU: 'menu',
     PLAYING: 'playing',
     PAUSED: 'paused',
-    GAME_OVER: 'gameOver',
+    GAME_OVER: 'gameOver'
   },
 
   ICE_COLOR: '#f0f8ff',
-  BOUNDARY_PADDING: 20,
+  BOUNDARY_PADDING: 20
 };
 
 export const PLAYER_POSITIONS = {
   PLAYER1: { x: width * 0.3, y: height * 0.3 },
   PLAYER2: { x: width * 0.7, y: height * 0.3 },
   ENEMY1: { x: width * 0.3, y: height * 0.6 },
-  ENEMY2: { x: width * 0.7, y: height * 0.6 },
+  ENEMY2: { x: width * 0.7, y: height * 0.6 }
 };
 
 export const NET_POSITIONS = {
-  TOP: {
-    x: width / 2 - GAME_CONSTANTS.GOAL_WIDTH / 2,
-    y: 0,
-  },
+  TOP: { x: width / 2 - GAME_CONSTANTS.GOAL_WIDTH / 2, y: 0 },
   BOTTOM: {
     x: width / 2 - GAME_CONSTANTS.GOAL_WIDTH / 2,
-    y: GAME_CONSTANTS.SCREEN_HEIGHT - GAME_CONSTANTS.GOAL_HEIGHT,
-  },
+    y: height - GAME_CONSTANTS.GOAL_HEIGHT - 50 // Moves the bottom goal net up by 50 units
+  }
 };

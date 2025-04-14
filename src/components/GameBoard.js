@@ -6,9 +6,8 @@ import Enemy from './Enemy';
 import Goalie from './Goalie';
 import Puck from './Puck';
 import Goal from './Goal';
-import ControlPad from './ControlPad';
 
-const GameBoard = ({ gameState, onMove }) => {
+const GameBoard = ({ gameState, onSelectPlayer }) => {
   const { selectedPlayer } = gameState;
 
   return (
@@ -19,10 +18,12 @@ const GameBoard = ({ gameState, onMove }) => {
       <Player
         body={gameState.player1.body}
         isSelected={selectedPlayer === 'player1'}
+        onTap={() => onSelectPlayer('player1')}
       />
       <Player
         body={gameState.player2.body}
         isSelected={selectedPlayer === 'player2'}
+        onTap={() => onSelectPlayer('player2')}
       />
 
       {/* Enemies */}
@@ -30,18 +31,15 @@ const GameBoard = ({ gameState, onMove }) => {
       <Enemy body={gameState.enemy2.body} />
 
       {/* Goalies */}
-      <Goalie body={gameState.goalie1.body} />
-      <Goalie body={gameState.goalie2.body} isFlipped />
+      <Goalie body={gameState.goalie1.body} isTopGoalie={true} topGoalieOffset={0} />
+      <Goalie body={gameState.goalie2.body} isFlipped isTopGoalie={false} bottomGoalieOffset={-55} />
 
       {/* Puck */}
       <Puck body={gameState.puck.body} />
 
-      {/* Goals (static visuals) */}
-      <Goal position={gameState.goal1.position} isLeft={true} />
-      <Goal position={gameState.goal2.position} isLeft={false} />
-
-      {/* Control Pad */}
-      <ControlPad onMove={onMove} />
+      {/* Goals (Visual Only) */}
+      <Goal position={gameState.goal1.position} isLeft={true} isTopGoal={true} />
+      <Goal position={gameState.goal2.position} isLeft={false} isTopGoal={false} />
     </View>
   );
 };

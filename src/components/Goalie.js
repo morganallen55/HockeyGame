@@ -1,13 +1,13 @@
 import React from 'react';
 import { View, Image, StyleSheet } from 'react-native';
 import goalieImage from '../assets/goalie.png';
-import { GAME_CONSTANTS } from '../constants';
+import { GAME_CONSTANTS } from '../constants/constants';
 
-const Goalie = ({ body, isFlipped }) => {
+const Goalie = ({ body, isFlipped, isTopGoalie, topGoalieOffset = 0, bottomGoalieOffset = 0 }) => {
   const width = body.bounds.max.x - body.bounds.min.x;
   const height = body.bounds.max.y - body.bounds.min.y;
   const x = body.position.x - width / 2;
-  const y = body.position.y - height / 2;
+  const y = body.position.y - height / 2 + (isTopGoalie ? topGoalieOffset : bottomGoalieOffset); // Adjust separately for top and bottom goalies
 
   return (
     <View style={[styles.container, { left: x, top: y }]}>

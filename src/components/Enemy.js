@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Image, StyleSheet } from 'react-native';
 import enemyImage from '../assets/enemy.png';
-import { GAME_CONSTANTS } from '../constants';
+import { GAME_CONSTANTS } from '../constants/constants';
 
 const Enemy = ({ body }) => {
   const width = body.bounds.max.x - body.bounds.min.x;

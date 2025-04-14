@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, TouchableOpacity, Text } from 'react-native';
+import { StyleSheet, View, Text } from 'react-native';
 import { GameEngine } from 'react-native-game-engine';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Matter from 'matter-js';
 
 import createGameEntities from './src/entities';
 import Physics from './src/physics';
-import { GAME_CONSTANTS } from './src/constants';
+import { GAME_CONSTANTS } from './src/constants/constants';
 import GameBoard from './src/components/GameBoard';
 import StartScreen from './src/screens/StartScreen';
 
@@ -78,6 +78,13 @@ export default function App() {
     return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
   };
 
+  const handleSelectPlayer = (playerId) => {
+    setEntities(prev => ({
+      ...prev,
+      selectedPlayer: playerId,
+    }));
+  };
+
   if (showStart) return <StartScreen onStart={startGame} />;
 
   return (
@@ -96,17 +103,13 @@ export default function App() {
         running={running}
         onEvent={(e) => {
           if (e.type === 'goal') onGoal(e.team);
-          if (e.type === 'select-player') {
-            setEntities(prev => ({ ...prev, selectedPlayer: e.id }));
-          }
+          if (e.type === 'select-player') handleSelectPlayer(e.id);
         }}
       >
         {entities.player1 && (
           <GameBoard
             gameState={entities}
-            onUpdateGameState={(updateFn) =>
-              setEntities(prev => updateFn(prev))
-            }
+            onSelectPlayer={handleSelectPlayer}
           />
         )}
       </GameEngine>
@@ -114,20 +117,11 @@ export default function App() {
       {gameOver && (
         <View style={styles.gameOverOverlay}>
           <Text style={styles.gameOverText}>{winner}</Text>
-          <TouchableOpacity style={styles.restartButton} onPress={startGame}>
-            <Text style={styles.restartButtonText}>Play Again</Text>
-          </TouchableOpacity>
+          <Text style={styles.restartText} onPress={startGame}>
+            Play Again
+          </Text>
         </View>
       )}
-
-      <View style={styles.controlsContainer}>
-        <TouchableOpacity style={styles.button} onPress={() => setRunning(!running)}>
-          <Text style={styles.buttonText}>{running ? 'Pause' : 'Resume'}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={resetGame}>
-          <Text style={styles.buttonText}>Reset</Text>
-        </TouchableOpacity>
-      </View>
     </GestureHandlerRootView>
   );
 }
@@ -157,24 +151,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
-  controlsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    padding: 20,
-    backgroundColor: '#333',
-  },
-  button: {
-    backgroundColor: '#4CAF50',
-    padding: 10,
-    borderRadius: 5,
-    minWidth: 100,
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
   gameOverOverlay: {
     position: 'absolute',
     top: 0,
@@ -192,15 +168,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 20,
   },
-  restartButton: {
-    backgroundColor: '#2196F3',
-    paddingHorizontal: 30,
-    paddingVertical: 12,
-    borderRadius: 8,
-  },
-  restartButtonText: {
-    color: '#FFF',
-    fontSize: 18,
-    fontWeight: 'bold',
+  restartText: {
+    fontSize: 20,
+    color: '#00f',
+    textDecorationLine: 'underline',
   },
 });

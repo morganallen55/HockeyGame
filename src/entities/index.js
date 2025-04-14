@@ -3,7 +3,7 @@ import {
   GAME_CONSTANTS,
   PLAYER_POSITIONS,
   NET_POSITIONS,
-} from "../constants";
+} from "../constants/constants";
 import Player from "../components/Player";
 import Enemy from "../components/Enemy";
 import Puck from "../components/Puck";
@@ -12,7 +12,7 @@ import Goal from "../components/Goal";
 
 const createGameEntities = () => {
   const engine = Matter.Engine.create({ enableSleeping: false });
-  engine.world.gravity.y = 0; // Disable gravity
+  engine.world.gravity.y = 0;
   const world = engine.world;
 
   const player1 = Matter.Bodies.rectangle(
@@ -52,7 +52,7 @@ const createGameEntities = () => {
     NET_POSITIONS.TOP.y + GAME_CONSTANTS.GOAL_HEIGHT + 10,
     GAME_CONSTANTS.GOALIE_SIZE,
     GAME_CONSTANTS.GOALIE_SIZE,
-    { label: "goalie1", isStatic: false }
+    { label: "goalie1", isStatic: true }
   );
 
   const goalie2 = Matter.Bodies.rectangle(
@@ -60,7 +60,7 @@ const createGameEntities = () => {
     NET_POSITIONS.BOTTOM.y - 10,
     GAME_CONSTANTS.GOALIE_SIZE,
     GAME_CONSTANTS.GOALIE_SIZE,
-    { label: "goalie2", isStatic: false }
+    { label: "goalie2", isStatic: true }
   );
 
   const puck = Matter.Bodies.circle(
